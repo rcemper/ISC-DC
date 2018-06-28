@@ -1,14 +1,14 @@
 zahl(num="",gen="") Public {
  ;;; convert number as German text
- ;;; w $$^zahl(-1123.505) >>>> Minus ein Tausend einhundertdreiundzwanzig Komma fünf null fünf
+ ;;; w $$^zahl(-1123.505) >>>> Minus ein Tausend einhundertdreiundzwanzig Komma fÃ¼nf null fÃ¼nf
 
- set dec=$s(num#1:$$dec($p(num,".",2)),1:"")
+ set dec=$p(num,".",2),dec=$s(dec?1.N:$$dec(dec),1:"")
  if num=0 quit "null"_dec
  set neg=$S(num<0:"Minus ",1:"")
  set num=$ZABS(num)
  if num=1 set gen=$zcvt(gen,"U") quit neg_"ein"_$case(gen,"W":"e","S":"es","M":"",:"s")
- if num<1000000000000000000000000 quit neg_$$trd(num\1)_dec
- quit "*** Zahl zu groß ***"
+ if num<10e23 quit neg_$$trd($p(num,"."))_dec
+ quit "*** Zahl zu groÃŸ ***"
 }
  ;
 dec(num) {
@@ -17,55 +17,69 @@ dec(num) {
  quit dec
 }
 zig(num) {
- if num<10 quit $li($lb("null","eins","zwei","drei","vier","fünf","sechs","sieben","acht","neun"),num+1)
- if num<20 quit $li($lb("zehn","elf","zwölf","dreizehn","vierzehn","fünfzehn","sechzehn","siebzehn","achtzehn","neunzehn"),num-9)
- set zig=num\10#10,zn=num#10
- set res=$s(zig=3:"dreißig"
-           ,1:$li($lb(,"zwan",,"vier","fünf","sech","sieb","acht","neun"),zig)_"zig")
+ if num<10 quit $li($lb("null","eins","zwei","drei","vier","fÃ¼nf","sechs","sieben","acht","neun"),num+1)
+ if num<20 quit $li($lb("zehn","elf","zwÃ¶lf","dreizehn","vierzehn","fÃ¼nfzehn","sechzehn","siebzehn","achtzehn","neunzehn"),num-9)
+ set zig=$e(num,*-1),zn=$e(num,*)
+ set res=$s(zig=3:"dreiÃŸig"
+           ,1:$li($lb(,"zwan",,"vier","fÃ¼nf","sech","sieb","acht","neun"),zig)_"zig")
  if zn set res=$s(zn=1:"ein",1:$$zig(zn))_"und"_res
  quit res 
 }
 hun(num) {
- set hun=num\100#10,zig=num#100,res=""
- if hun set res=$s(hun=1:"ein",1:$$zig(hun))_"hundert"
- quit res_$$zig(zig)
+ set hun=$e(num,*-2),zig=$e(num,*-1,*),res="",m="hundert"
+ set res=$s(hun=1:"ein"_m
+           ,hun>1:$$zig(hun)_m
+           ,1:"" )
+ quit $replace(res_$$zig(zig),"null","")
 }
+ein(res) {
+ if $e(res,*-3,*)="eins" set res=$e(res,1,*-1)
+ quit $replace(res,"null","")
+} 
 tsd(num) { ;1,000  10e3
- set tsd=num\1000#1000,hun=num#1000,res=""
- if tsd {
-      set res=$$hun(tsd)
-      if $e(res,*-3,*)="eins" set res=$e(res,1,*-1)
-      set res=res_" Tausend "
-      }
+ set tsd=$e(num,*-5,*-3),hun=$e(num,*-2,*),res=""
+ if tsd set res=$$ein($$hun(tsd))_" Tausend "
  quit res_$$hun(hun)
 }
 mio(num) { ;1,000,000  10e6
- set mio=num\1000000#1000,tsd=num#1000000,res="",m=" Million"
- if mio set res=$s(mio=1:"eine"_m,1:$$hun(mio)_m_"en")_" "
+ set mio=$e(num,*-8,*-6),tsd=$e(num,*-5,*),m=" Million"
+ set res=$s(mio=1:"eine"_m_" "
+           ,mio>1:$$ein($$hun(mio))_m_"en "
+           ,1:"")  
  quit res_$$tsd(tsd)
 }
 mrd(num) { ;1,000,000,000  10e9
- set mrd=num\1000000000#1000,mio=num#1000000000,res="",m=" Milliarde"
- if mrd set res=$s(mrd=1:"eine"_m,1:$$hun(mrd)_m_"n")_" "
+ set mrd=$e(num,*-11,*-9),mio=$e(num,*-8,*),m=" Milliarde"
+ set res=$s(mrd=1:"eine"_m_" "
+           ,mrd>1:$$ein($$hun(mrd))_m_"n "
+           ,1:"" )
  quit res_$$mio(mio)
 }
 bio(num) { ;1,000,000,000,000 10e12
- set bio=num\1000000000000#1000,mrd=num#1000000000000,res="",m=" Billion"
- if bio set res=$s(bio=1:"eine"_m,1:$$hun(bio)_m_"en")_" "
+ set bio=$e(num,*-14,*-12),mrd=$e(num,*-11,*),m=" Billion"
+ set res=$s(bio=1:"eine"_m_" "
+           ,bio>1:$$ein($$hun(bio))_m_"en "
+           ,1:"" )
  quit res_$$mrd(mrd)
 }
 brd(num) { ;1,000,000,000,000,000 10e15
- set brd=num\1000000000000000#1000,bio=num#1000000000000000,res="",m=" Billiarde"
- if brd set res=$s(brd=1:"eine"_m,1:$$hun(brd)_m_"n")_" "
+ set brd=$e(num,*-17,*-15),bio=$e(num,*-14,*),res="",m=" Billiarde"
+ set res=$s(brd=1:"eine"_m_" "
+           ,brd>1:$$ein($$hun(brd))_m_"n"_" "
+           ,1:"" )
  quit res_$$bio(bio)
 }
 tri(num) {;1,000,000,000,000,000,000 10e18
- set tri=num\1000000000000000000#1000,brd=num#1000000000000000000,res="",m=" Trillion"
- if tri set res=$s(tri=1:"eine"_m,1:$$hun(tri)_m_"en")_" "
+ set tri=$e(num,*-20,*-18),brd=$e(num,*-17,*),m=" Trillion"
+ set res=$s(tri=1:"eine"_m_" "
+           ,tri>1:$$ein($$hun(tri))_m_"en"_" "
+           ,1:"" )
  quit res_$$brd(brd)
 }   
 trd(num) { ;1,000,000,000,000,000,000,000 10e21 
- set trd=num\1000000000000000000000#1000,tri=num#1000000000000000000000,res="",m=" Trilliarde"
- if trd set res=$s(trd=1:"eine"_m,1:$$hun(trd)_m_"n")_" "
+ set trd=$e(num,*-23,*-21),tri=$e(num,*-20,*),m=" Trilliarde"
+ set res=$s(trd=1:"eine"_m_" "
+           ,trd>1:$$ein($$hun(trd))_m_"n"_" "
+           ,1:"" )
  quit res_$$tri(tri)
 }
