@@ -5,7 +5,7 @@ zahl(num="",gen="") Public {
  set dec=$p(num,".",2),dec=$s(dec?1.N:$$dec(dec),1:"")
  if num=0 quit "null"_dec
  set neg=$S(num<0:"Minus ",1:"")
- set num=$ZABS(num)
+ if $l(neg) set num=$tr(num,"-")
  if num=1 set gen=$zcvt(gen,"U") quit neg_"ein"_$case(gen,"W":"e","S":"es","M":"",:"s")
  if num<10e23 quit neg_$$trd($p(num,"."))_dec
  quit "*** Zahl zu groß ***"
