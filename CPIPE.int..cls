@@ -1,4 +1,4 @@
-zpipe  quit ; CPIPE example to run host console command
+zpipe  quit ; CPIPE example to run host console command 
 cmd(command="",test=0) ;
  if command="" set command="dir"
  quit $$execute(command,test)
